@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=65.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "xm4gui"
+version = "0.1.0"
+description = "Desktop GUI for Sony WH-1000XM4: firmware update, NVDM backup and noise control over Bluetooth"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "GPL-3.0-or-later"}
+dependencies = [
+    "PySide6>=6.6",
+    # macOS support lives on this branch until it is merged upstream (randwardatake/wh1000xm4-anc-optimizer#3).
+    "xm4_optimizer @ git+https://github.com/lonelyversemaker/wh1000xm4-anc-optimizer@5fe5991",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0", "pytest-qt>=4.2"]
+build = ["pyinstaller>=6.0", "pillow"]
+
+[project.gui-scripts]
+xm4gui = "xm4gui.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["xm4gui*"]
+
+[tool.setuptools.package-data]
+"xm4gui.ui" = ["resources/*.png"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+qt_api = "pyside6"

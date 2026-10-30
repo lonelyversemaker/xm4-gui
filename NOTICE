@@ -1,0 +1,14 @@
+XM4 Firmware Tool
+Copyright (C) 2026 lonelyversemaker
+
+This program is free software: you can redistribute it and/or modify it under the
+terms of the GNU General Public License as published by the Free Software Foundation,
+either version 3 of the License, or (at your option) any later version. See LICENSE.
+
+It depends on, and contains code ported from, wh1000xm4-anc-optimizer by Ege
+(randwardatake), https://github.com/randwardatake/wh1000xm4-anc-optimizer,
+licensed GPL-3.0-or-later:
+  - xm4gui/engine/flash.py   ported from tools/flash_firmware.py
+  - xm4gui/engine/backup.py  ported from tools/backup_nvdm.py
+
+Not affiliated with or endorsed by Sony. Use at your own risk.
