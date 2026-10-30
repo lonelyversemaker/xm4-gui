@@ -1,4 +1,4 @@
-"""Main window: headset status, noise control and the backup/flash workflow."""
+"""Main window: headset status and the backup/flash workflow."""
 
 from __future__ import annotations
 
@@ -9,13 +9,12 @@ from typing import Callable, Optional
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont, QFontDatabase
 from PySide6.QtWidgets import (
-    QButtonGroup, QCheckBox, QComboBox, QFileDialog, QFormLayout, QGroupBox, QHBoxLayout, QLabel,
-    QMainWindow, QMessageBox, QPlainTextEdit, QProgressBar, QPushButton, QSlider, QToolButton,
+    QCheckBox, QComboBox, QFileDialog, QFormLayout, QGroupBox, QHBoxLayout, QLabel,
+    QMainWindow, QMessageBox, QPlainTextEdit, QProgressBar, QPushButton, QToolButton,
     QVBoxLayout, QWidget,
 )
 
 from xm4_optimizer.firmware import KnownFirmware, identify_firmware
-from xm4_optimizer.transport.sony_control import AmbientSoundState, AncMode
 
 from ..engine import device
 from ..engine.backup import backup_nvdm
@@ -27,25 +26,12 @@ from .workers import Worker
 
 MIN_BATTERY = 50
 FLASH_STAGES = ["connect", "erase", "program", "verify", "commit", "reconnect"]
-ANC_BUTTONS = [
-    (AncMode.NOISE_CANCELLING, "anc_nc"),
-    (AncMode.AMBIENT, "anc_ambient"),
-    (AncMode.WIND, "anc_wind"),
-    (AncMode.OFF, "anc_off"),
-]
 # Throughput measured on a real headset (~2.7 KB/s), used for the time estimate in the dialog.
 EXPECTED_KB_PER_S = 2.7
 
 
 def short_mac(mac: str) -> str:
     return mask_mac(mac)
-
-
-def describe_ambient(state: AmbientSoundState) -> str:
-    name = t(dict(ANC_BUTTONS)[state.mode])
-    if state.mode is AncMode.AMBIENT:
-        name += f" ({state.ambient_level}/20{', ' + t('voice').lower() if state.focus_on_voice else ''})"
-    return name
 
 
 class MainWindow(QMainWindow):
@@ -68,7 +54,6 @@ class MainWindow(QMainWindow):
         central = QWidget()
         root = QVBoxLayout(central)
         root.addWidget(self._build_headset_box())
-        root.addWidget(self._build_anc_box())
         root.addWidget(self._build_update_box())
         root.addWidget(self._build_log_box(), 1)
         self.setCentralWidget(central)
@@ -93,10 +78,8 @@ class MainWindow(QMainWindow):
         form = QFormLayout()
         self.fw_label = QLabel(t("unknown"))
         self.battery_label = QLabel(t("unknown"))
-        self.anc_label = QLabel(t("unknown"))
         form.addRow(t("firmware") + ":", self.fw_label)
         form.addRow(t("battery") + ":", self.battery_label)
-        form.addRow(t("mode") + ":", self.anc_label)
         lay.addLayout(form)
 
         self.headset_msg = QLabel()
@@ -104,38 +87,6 @@ class MainWindow(QMainWindow):
         self.headset_msg.setStyleSheet("color: palette(placeholder-text);")
         self.headset_msg.setVisible(False)
         lay.addWidget(self.headset_msg)
-        return box
-
-    def _build_anc_box(self) -> QGroupBox:
-        box = QGroupBox(t("anc"))
-        lay = QVBoxLayout(box)
-        row = QHBoxLayout()
-        self.anc_group = QButtonGroup(self)
-        self.anc_group.setExclusive(True)
-        self.anc_buttons: dict[AncMode, QPushButton] = {}
-        for mode, key in ANC_BUTTONS:
-            btn = QPushButton(t(key))
-            btn.setCheckable(True)
-            btn.clicked.connect(lambda _checked=False, m=mode: self._set_anc(m))
-            self.anc_group.addButton(btn)
-            self.anc_buttons[mode] = btn
-            row.addWidget(btn)
-        lay.addLayout(row)
-
-        row2 = QHBoxLayout()
-        row2.addWidget(QLabel(t("ambient_level")))
-        self.level_slider = QSlider(Qt.Orientation.Horizontal)
-        self.level_slider.setRange(1, 20)
-        self.level_slider.setValue(10)
-        self.level_value = QLabel("–")
-        self.level_slider.valueChanged.connect(lambda v: self.level_value.setText(str(v)))
-        self.level_slider.sliderReleased.connect(lambda: self._set_anc(AncMode.AMBIENT))
-        self.voice_check = QCheckBox(t("voice"))
-        self.voice_check.clicked.connect(lambda: self._set_anc(AncMode.AMBIENT))
-        row2.addWidget(self.level_slider, 1)
-        row2.addWidget(self.level_value)
-        row2.addWidget(self.voice_check)
-        lay.addLayout(row2)
         return box
 
     def _build_update_box(self) -> QGroupBox:
@@ -155,6 +106,10 @@ class MainWindow(QMainWindow):
         hint.setStyleSheet("color: palette(placeholder-text);")
         row.addWidget(hint, 1)
         lay.addLayout(row)
+
+        where = QLabel(f'<a href="{t("where_fw_url")}">{t("where_fw")}</a>')
+        where.setOpenExternalLinks(True)
+        lay.addWidget(where)
 
         self.file_label = QLabel(t("fw_none"))
         self.file_label.setWordWrap(True)
@@ -245,11 +200,6 @@ class MainWindow(QMainWindow):
         connected = self.status is not None
         self.refresh_btn.setEnabled(idle)
         self.device_combo.setEnabled(idle)
-        for btn in self.anc_buttons.values():
-            btn.setEnabled(idle and connected)
-        ambient = connected and self.status.ambient.mode is AncMode.AMBIENT
-        self.level_slider.setEnabled(idle and ambient)
-        self.voice_check.setEnabled(idle and ambient)
         self.backup_btn.setEnabled(idle and connected)
         self.choose_btn.setEnabled(idle)
         self.allow_unknown.setEnabled(idle)
@@ -275,27 +225,11 @@ class MainWindow(QMainWindow):
     def _show_status(self) -> None:
         s = self.status
         if s is None:
-            for label in (self.fw_label, self.battery_label, self.anc_label):
+            for label in (self.fw_label, self.battery_label):
                 label.setText(t("unknown"))
-            self.anc_group.setExclusive(False)
-            for btn in self.anc_buttons.values():
-                btn.setChecked(False)
-            self.anc_group.setExclusive(True)
             return
         self.fw_label.setText(s.firmware)
         self.battery_label.setText(f"{s.battery}%" + (f" ({t('charging')})" if s.charging else ""))
-        self._show_ambient(s.ambient)
-
-    def _show_ambient(self, state: AmbientSoundState) -> None:
-        self.anc_label.setText(describe_ambient(state))
-        self.anc_buttons[state.mode].setChecked(True)
-        # Outside ambient mode the headset may report level 0; keep the slider where it was.
-        if state.ambient_level >= 1:
-            self.level_slider.blockSignals(True)
-            self.level_slider.setValue(state.ambient_level)
-            self.level_slider.blockSignals(False)
-        self.level_value.setText(str(self.level_slider.value()))
-        self.voice_check.setChecked(state.focus_on_voice)
 
     # ---------- background work ----------
 
@@ -345,8 +279,7 @@ class MainWindow(QMainWindow):
             if target:
                 try:
                     status = device.read_status(target)
-                    report.log(f"Status: firmware {status.firmware}, battery {status.battery}%, "
-                               f"noise control {status.ambient.mode.name}")
+                    report.log(f"Status: firmware {status.firmware}, battery {status.battery}%")
                 except Exception as e:
                     error = str(e)
                     report.log(f"Status query failed: {e}")
@@ -393,30 +326,6 @@ class MainWindow(QMainWindow):
             return self.devices, mac, device.read_status(mac), None
 
         self._run("status", work, self._on_refreshed, self._on_status_failed)
-
-    def _set_anc(self, mode: AncMode) -> None:
-        mac = self.mac
-        if mac is None or self.busy or self.status is None:
-            return
-        level = self.level_slider.value() if mode is AncMode.AMBIENT else None
-        voice = self.voice_check.isChecked() if mode is AncMode.AMBIENT else None
-
-        def work(report: Reporter):
-            report.log(f"Setting noise control: {mode.name} level={level} voice={voice}")
-            return device.set_anc(mac, mode, level, voice)
-
-        self._run("anc", work, self._on_anc_set, self._on_anc_failed)
-
-    def _on_anc_set(self, state: AmbientSoundState) -> None:
-        if self.status is not None:
-            self.status = device.HeadsetStatus(self.status.mac, self.status.firmware, self.status.battery,
-                                               self.status.charging, state)
-        self._show_ambient(state)
-
-    def _on_anc_failed(self, error: str) -> None:
-        if self.status is not None:
-            self._show_ambient(self.status.ambient)
-        QMessageBox.warning(self, t("error"), t("anc_failed", error=error))
 
     # ---------- backup ----------
 

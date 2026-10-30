@@ -5,7 +5,6 @@ os.environ.setdefault("XM4GUI_LANG", "en")
 
 import pytest
 from xm4_optimizer.firmware import KnownFirmware
-from xm4_optimizer.transport.sony_control import AmbientSoundState, AncMode
 
 from xm4gui.engine import device
 from xm4gui.engine.events import Progress
@@ -16,7 +15,7 @@ MAC = "00:11:22:33:44:55"
 
 
 def status(battery=80, firmware="2.5.0"):
-    return device.HeadsetStatus(MAC, firmware, battery, False, AmbientSoundState(AncMode.NOISE_CANCELLING, False, 10))
+    return device.HeadsetStatus(MAC, firmware, battery, False)
 
 
 @pytest.fixture
@@ -40,7 +39,6 @@ def known_file(tmp_path, monkeypatch, version):
 def test_status_is_shown(window):
     assert window.fw_label.text() == "2.5.0"
     assert window.battery_label.text() == "80%"
-    assert window.anc_buttons[AncMode.NOISE_CANCELLING].isChecked()
     assert "XX:XX:XX" in window.device_combo.currentText()
 
 

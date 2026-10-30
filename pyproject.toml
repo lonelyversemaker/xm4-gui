@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "xm4gui"
 version = "0.1.0"
-description = "Desktop GUI for Sony WH-1000XM4: firmware update, NVDM backup and noise control over Bluetooth"
+description = "Desktop GUI for Sony WH-1000XM4: firmware update and NVDM backup over Bluetooth"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "GPL-3.0-or-later"}

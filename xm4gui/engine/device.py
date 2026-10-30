@@ -1,4 +1,4 @@
-"""Headset discovery, status and noise cancelling control."""
+"""Headset discovery and status."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import List, Optional, Tuple
 
 from xm4_optimizer.transport import rfcomm_socket
-from xm4_optimizer.transport.sony_control import AmbientSoundState, AncMode, SonyControlClient
+from xm4_optimizer.transport.sony_control import SonyControlClient
 
 from .events import Reporter
 
@@ -20,7 +20,6 @@ class HeadsetStatus:
     firmware: str
     battery: int
     charging: bool
-    ambient: AmbientSoundState
 
 
 def list_devices() -> List[Tuple[str, str]]:
@@ -37,20 +36,7 @@ def read_status(mac: str) -> HeadsetStatus:
     with SonyControlClient.connect(mac) as client:
         firmware = client.get_firmware_version()
         battery = client.get_battery()
-        ambient = client.get_ambient_sound()
-    return HeadsetStatus(mac, firmware, battery.level, battery.charging, ambient)
-
-
-def set_anc(mac: str, mode: AncMode, level: Optional[int] = None, voice: Optional[bool] = None) -> AmbientSoundState:
-    """Sets the mode, keeping the current ambient level and voice focus unless given."""
-    with SonyControlClient.connect(mac) as client:
-        current = client.get_ambient_sound()
-        target = AmbientSoundState(
-            mode,
-            current.focus_on_voice if voice is None else voice,
-            current.ambient_level if level is None else level,
-        )
-        return client.set_ambient_sound(target)
+    return HeadsetStatus(mac, firmware, battery.level, battery.charging)
 
 
 def wait_for_reconnect(mac: str, report: Optional[Reporter] = None, timeout_s: float = 180.0,
