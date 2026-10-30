@@ -4,7 +4,7 @@ A desktop app for the Sony WH-1000XM4. Pick a firmware file and install it with 
 
 Русская версия ниже.
 
-It is a graphical front end for [wh1000xm4-anc-optimizer](https://github.com/randwardatake/wh1000xm4-anc-optimizer) by randwardatake. That project handles the Bluetooth transport, the official firmware table and the Sony control protocol. The firmware flasher and the NVDM backup are ported from its `tools/` scripts and now report progress and support cancelling (see `NOTICE`).
+It is a graphical front end for [wh1000xm4-anc-optimizer](https://github.com/randwardatake/wh1000xm4-anc-optimizer) by randwardatake, used through [our fork with macOS support](https://github.com/lonelyversemaker/wh1000xm4-anc-optimizer) (tag `v0.1.0-macos`). That project handles the Bluetooth transport, the official firmware table and the Sony control protocol. The firmware flasher and the NVDM backup are ported from its `tools/` scripts and now report progress and support cancelling (see `NOTICE`).
 
 > Not affiliated with Sony. Flashing firmware always carries some risk. The app installs only images whose SHA-256 matches a known official WH-1000XM4 release, unless you explicitly override that.
 
@@ -67,7 +67,7 @@ Official images are listed by SHA-256 in `xm4_optimizer/firmware.py` of the upst
 - сделать резервную копию калибровки;
 - переключать режимы шумоподавления.
 
-Это графическая оболочка над [wh1000xm4-anc-optimizer](https://github.com/randwardatake/wh1000xm4-anc-optimizer). Прошивальщик и бэкап перенесены из его скриптов: добавлены прогресс и отмена.
+Это графическая оболочка над [wh1000xm4-anc-optimizer](https://github.com/randwardatake/wh1000xm4-anc-optimizer), через [наш форк с поддержкой macOS](https://github.com/lonelyversemaker/wh1000xm4-anc-optimizer). Прошивальщик и бэкап перенесены из его скриптов: добавлены прогресс и отмена.
 
 **Запуск из исходников:** см. команды выше. На macOS нужны Xcode Command Line Tools, на Linux нужен BlueZ. Сначала подключите наушники в системных настройках Bluetooth.
 
