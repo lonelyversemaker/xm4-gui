@@ -7,7 +7,8 @@ PY="${PYTHON:-.venv/bin/python}"
 
 SRC_DIR=$("$PY" -c 'import xm4_optimizer.transport.macos_bridge as m; print(m.SOURCE_DIR)')
 mkdir -p build
-swiftc -O "$SRC_DIR/rfcomm_bridge.swift" -o build/rfcomm_bridge \
+# Target an older macOS than the build host; the bundled Python sets the real floor.
+swiftc -O -target "$(uname -m)-apple-macos12.0" "$SRC_DIR/rfcomm_bridge.swift" -o build/rfcomm_bridge \
   -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __info_plist -Xlinker "$SRC_DIR/Info.plist"
 
 XM4_PREBUILT_BRIDGE="$PWD/build/rfcomm_bridge" "$PY" -m PyInstaller --noconfirm --clean \
