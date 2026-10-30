@@ -39,7 +39,7 @@ Click a link to download the file:
 
 ## Install
 
-**macOS:** download `XM4 Firmware Tool.app` from [Releases](https://github.com/lonelyversemaker/xm4-gui/releases). The app is not notarized. On first launch, right-click it, choose *Open*, then allow Bluetooth access when macOS asks.
+**macOS 12 or newer, Apple Silicon or Intel:** download `XM4-Firmware-Tool-macOS-universal.zip` from [Releases](https://github.com/lonelyversemaker/xm4-gui/releases), unzip it and move the app to Applications. The app is not notarized. On first launch, right-click it, choose *Open*, then allow Bluetooth access when macOS asks.
 
 **From source (macOS and Linux):**
 
@@ -57,7 +57,18 @@ python3 -m venv .venv
 
 - **Backend:** Bluetooth, the official firmware table and the Sony protocol come from [wh1000xm4-anc-optimizer](https://github.com/randwardatake/wh1000xm4-anc-optimizer) by randwardatake. The app uses [our fork with macOS support](https://github.com/lonelyversemaker/wh1000xm4-anc-optimizer) (tag `v0.1.0-macos`).
 - **Ported code:** the flasher and backup are ported from its `tools/` scripts, with progress reporting and cancellation added (see `NOTICE`).
-- **Build:** `.venv/bin/pip install -e '.[build]'`, then `./packaging/build_macos.sh` (→ `dist/XM4 Firmware Tool.app`, Bluetooth helper prebuilt inside) or `./packaging/build_linux.sh`.
+- **Build (Linux):** `.venv/bin/pip install -e '.[build]'`, then `./packaging/build_linux.sh`.
+- **Build (macOS release, universal2, macOS 12+):** install the universal2 Python 3.13 from [python.org](https://www.python.org/downloads/macos/), then:
+
+  ```sh
+  /Library/Frameworks/Python.framework/Versions/3.13/bin/python3.13 -m venv .venv-universal
+  .venv-universal/bin/pip install "PySide6-Essentials==6.9.2" pyinstaller pillow
+  .venv-universal/bin/pip install --no-deps "xm4_optimizer @ git+https://github.com/lonelyversemaker/wh1000xm4-anc-optimizer@v0.1.1-macos"
+  .venv-universal/bin/pip install --no-deps -e .
+  PYTHON=.venv-universal/bin/python ./packaging/build_macos.sh
+  ```
+
+  `--no-deps` keeps numpy out: it has no universal2 wheel, and the app does not need it. PySide6 6.9 is the last series that supports macOS 12. With Homebrew Python the script makes a build for this Mac only.
 - **Tests:** `.venv/bin/python -m pytest`. They use fake RFCOMM sockets, and the window runs offscreen with pytest-qt.
 
 ---
@@ -99,6 +110,6 @@ python3 -m venv .venv
 
 ### Установка
 
-**macOS:** скачайте `XM4 Firmware Tool.app` в [Releases](https://github.com/lonelyversemaker/xm4-gui/releases). Приложение не нотаризовано. При первом запуске нажмите на него правой кнопкой, выберите «Открыть», затем разрешите доступ к Bluetooth, когда macOS спросит.
+**macOS 12 и новее, Apple Silicon или Intel:** скачайте `XM4-Firmware-Tool-macOS-universal.zip` в [Releases](https://github.com/lonelyversemaker/xm4-gui/releases), распакуйте и перенесите приложение в «Программы». Приложение не нотаризовано. При первом запуске нажмите на него правой кнопкой, выберите «Открыть», затем разрешите доступ к Bluetooth, когда macOS спросит.
 
 **Из исходников:** см. команды в разделе [Install](#install). На macOS нужны Xcode Command Line Tools, на Linux нужен BlueZ.

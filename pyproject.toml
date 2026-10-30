@@ -4,15 +4,15 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "xm4gui"
-version = "0.1.0"
+version = "0.1.1"
 description = "Desktop GUI for Sony WH-1000XM4: firmware update and NVDM backup over Bluetooth"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "GPL-3.0-or-later"}
 dependencies = [
-    "PySide6>=6.6",
+    "PySide6-Essentials>=6.6",
     # Our fork of randwardatake/wh1000xm4-anc-optimizer with macOS support.
-    "xm4_optimizer @ git+https://github.com/lonelyversemaker/wh1000xm4-anc-optimizer@v0.1.0-macos",
+    "xm4_optimizer @ git+https://github.com/lonelyversemaker/wh1000xm4-anc-optimizer@v0.1.1-macos",
 ]
 
 [project.optional-dependencies]

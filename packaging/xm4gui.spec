@@ -5,6 +5,8 @@ import sys
 block_cipher = None
 root = os.path.abspath(os.path.join(SPECPATH, ".."))
 bridge = os.environ.get("XM4_PREBUILT_BRIDGE")
+# "universal2" needs a universal2 Python (python.org installer) and universal2 wheels.
+target_arch = os.environ.get("XM4_TARGET_ARCH") or None
 # xm4_optimizer may be an editable install, which PyInstaller cannot discover on its own.
 import xm4_optimizer
 from PyInstaller.utils.hooks import collect_submodules
@@ -16,12 +18,14 @@ a = Analysis(
     pathex=[root, xm4_root],
     binaries=[(bridge, ".")] if bridge else [],
     datas=[(icon, "xm4gui/ui/resources")],
-    hiddenimports=["xm4gui.ui.main_window"] + collect_submodules("xm4_optimizer"),
-    excludes=["tkinter", "numpy.f2py", "PySide6.Qt3DCore", "PySide6.QtWebEngineCore", "PySide6.QtQuick", "PySide6.QtQml"],
+    # Only the transport and firmware table are needed; the DSP code (numpy) is left out.
+    hiddenimports=["xm4gui.ui.main_window", "xm4_optimizer.firmware"] + collect_submodules("xm4_optimizer.transport"),
+    excludes=["tkinter", "numpy", "PySide6.Qt3DCore", "PySide6.QtWebEngineCore", "PySide6.QtQuick", "PySide6.QtQml"],
     cipher=block_cipher,
 )
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
-exe = EXE(pyz, a.scripts, [], exclude_binaries=True, name="xm4gui", console=False, icon=icon)
+exe = EXE(pyz, a.scripts, [], exclude_binaries=True, name="xm4gui", console=False, icon=icon,
+          target_arch=target_arch)
 coll = COLLECT(exe, a.binaries, a.datas, name="xm4gui")
 
 if sys.platform == "darwin":
@@ -31,7 +35,7 @@ if sys.platform == "darwin":
         icon=icon,
         bundle_identifier="io.github.lonelyversemaker.xm4gui",
         info_plist={
-            "CFBundleShortVersionString": "0.1.0",
+            "CFBundleShortVersionString": "0.1.1",
             "NSBluetoothAlwaysUsageDescription": "XM4 Firmware Tool talks to your Sony WH-1000XM4 over Bluetooth to read its status, back up its calibration and install firmware.",
             "NSHighResolutionCapable": True,
         },
