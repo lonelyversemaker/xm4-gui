@@ -4,6 +4,8 @@ A desktop app to install official firmware on the **Sony WH-1000XM4**, including
 
 **[Русская версия ниже](#по-русски)**
 
+<p align="center"><img src="docs/screenshot-en.png" width="600" alt="XM4 Firmware Tool window with an official 2.5.0 file selected and the pre-flight checklist"></p>
+
 > Not affiliated with Sony. Flashing firmware always carries some risk. The app installs only files whose SHA-256 matches a known official WH-1000XM4 release.
 
 ## Where to get the firmware
@@ -76,6 +78,8 @@ python3 -m venv .venv
 ## По-русски
 
 Приложение для установки официальной прошивки на **Sony WH-1000XM4**, в том числе для отката, например с 3.0.1 на 2.5.0. Выбираете файл и нажимаете кнопку, терминал не нужен. Работает на macOS и Linux.
+
+<p align="center"><img src="docs/screenshot-ru.png" width="600" alt="Окно XM4 Firmware Tool: выбран официальный файл 2.5.0 и показаны проверки перед прошивкой"></p>
 
 ### Где взять прошивку
 
